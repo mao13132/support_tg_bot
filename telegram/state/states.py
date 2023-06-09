@@ -7,7 +7,7 @@ from sql.sql_connector import BotDB
 
 from telegram.keyboard.keyboards import Admin_keyb
 from telegram.sendler.sendler import Sendler_msg
-from telegram.settings.settings import GOOD_SCREEN_MSG, LOGO, ADMIN, ERROR_SCREEN, ERROR_PHONE, GOOD_BONUS
+from telegram.settings.settings import GOOD_SCREEN_MSG, LOGO, ADMIN, ERROR_SCREEN, ERROR_PHONE, GOOD_BONUS, ERROR_SUMM
 
 
 class States(StatesGroup):
@@ -20,6 +20,8 @@ class States(StatesGroup):
     ad_phone = State()
 
     ad_token = State()
+
+    set_summ = State()
 
 async def screen_state(message: Message, state: FSMContext):
 
@@ -178,6 +180,36 @@ async def ad_token(message: Message, state: FSMContext):
 
     await state.finish()
 
+
+async def set_summ(message: Message, state: FSMContext):
+
+    await Sendler_msg.log_client_message(message)
+
+    summa_client = message.text
+
+    if not summa_client.isdigit():
+        keyboard = Admin_keyb().cansel()
+        await message.reply(ERROR_SUMM, reply_markup=keyboard)
+        return False
+
+    keyb = ''
+    msg = ''
+
+    async with state.proxy() as data:
+        data['summa'] = message.text
+
+        keyb = Admin_keyb().approve_pay(data['phone'], data['user_id'], data['summa'])
+
+        msg = f'⚠️ Подтвердите оплату клиенту\n\n' \
+              f'ID: {data["user_id"]}\n\n' \
+              f'номер: {data["phone"]}\n\n' \
+              f'Cумма: {data["summa"]}'
+
+    await Sendler_msg().sendler_photo_message(message, LOGO, msg, keyb)
+
+
+    await state.finish()
+
 def register_state(dp: Dispatcher):
     dp.register_message_handler(screen_state, state=States.screen_state, content_types=[types.ContentType.ANY])
     dp.register_message_handler(get_support, state=States.get_support, content_types=[types.ContentType.ANY])
@@ -187,3 +219,5 @@ def register_state(dp: Dispatcher):
     dp.register_message_handler(ad_phone, state=States.ad_phone)
 
     dp.register_message_handler(ad_token, state=States.ad_token)
+
+    dp.register_message_handler(set_summ, state=States.set_summ)

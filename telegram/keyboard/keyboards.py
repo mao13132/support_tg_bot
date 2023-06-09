@@ -65,15 +65,28 @@ class Admin_keyb:
         return self._start_key
 
     def screen_phone(self, id_user, phone):
-        self._start_key = InlineKeyboardMarkup(row_width=1)
+        self._start_key = InlineKeyboardMarkup(row_width=2)
+
+
+        self._start_key.add(InlineKeyboardButton(text=f'💵 Оплатить 100',
+                                                 callback_data=f'qiwi-{phone[1:]}-{id_user}-100'))
+
+        self._start_key.insert(InlineKeyboardButton(text=f'💵 Оплатить 200',
+                                                 callback_data=f'qiwi-{phone[1:]}-{id_user}-200'))
+
+        self._start_key.add(InlineKeyboardButton(text=f'💵 Ввести сумму бонуса',
+                                                 callback_data=f'pay-{phone[1:]}-{id_user}-set'))
 
         self._start_key.add(InlineKeyboardButton(text=f'⌨️ Ответить клиенту', callback_data=f'msend-{id_user}'))
 
-        self._start_key.add(InlineKeyboardButton(text=f'💵 Оплатить бонус', callback_data=f'qiwi-{phone[1:]}-{id_user}-100'))
+        return self._start_key
 
-        self._start_key.add(InlineKeyboardButton(text=f'💵 Оплатить бонус', callback_data=f'qiwi-{phone[1:]}-{id_user}-200'))
+    def approve_pay(self, phone, id_user, summa):
+        self._start_key = InlineKeyboardMarkup(row_width=2)
 
-        self._start_key.add(InlineKeyboardButton(text=f'💵 Оплатить бонус', callback_data=f'qiwi-{phone[1:]}-{id_user}'))
+
+        self._start_key.add(InlineKeyboardButton(text=f'💵 Оплатить {summa}',
+                                                 callback_data=f'qiwi-{phone}-{id_user}-{summa}'))
 
         return self._start_key
 

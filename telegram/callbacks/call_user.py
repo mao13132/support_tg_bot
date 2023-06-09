@@ -146,7 +146,7 @@ async def qiwi(call: types.CallbackQuery):
         return False
 
     try:
-        _, phone, user_id = str(call.data).split('-')
+        _, phone, user_id, SUMMA = str(call.data).split('-')
 
     except:
         print(f'Ошибка при разборе qiwi')
@@ -189,7 +189,7 @@ async def qiwi(call: types.CallbackQuery):
                          f'Спасибо, что обратились в нашу службу поддержки клиентов!'
 
             with open(BONUS, 'rb') as file:
-                user_msg = await call.message.bot.send_photo(user_id,  msg_client)
+                user_msg = await call.message.bot.send_photo(user_id, file,  msg_client)
 
             try:
                 await call.bot.pin_chat_message(chat_id=user_id,
@@ -200,12 +200,41 @@ async def qiwi(call: types.CallbackQuery):
 
         else:
             msg = f'⛔️ Ошибка при оплате {SUMMA} рублей на номер +{phone} оператор: {operator_name}'
-    except:
-        msg = f'⛔️ Ошибка при оплате {SUMMA} рублей на номер +{phone} оператор: {operator_name}'
+    except Exception as es:
+        msg = f'⛔️ Ошибка при оплате {SUMMA} рублей на номер +{phone} оператор: {operator_name} "{es}"'
 
 
 
     await call.message.reply(msg)
+
+async def pay(call: types.CallbackQuery, state: FSMContext):
+
+    await Sendler_msg.log_client_call(call)
+
+    if not str(call.from_user.id) in ADMIN:
+        await call.message.reply(f'Ошибка доступа')
+        return False
+
+    try:
+        _, phone, user_id, summa = str(call.data).split('-')
+
+    except:
+        print(f'Ошибка при разборе pay')
+        return False
+
+    if summa == 'set':
+        msg = '🤲 Пришлите следующим сообщением сумму которые необходимо оплатить клиенту'
+        await call.message.reply(msg)
+
+        await States.set_summ.set()
+
+        async with state.proxy() as data:
+            data['phone'] = phone
+            data['user_id'] = user_id
+
+
+
+
 
 
 def register_callbacks(dp: Dispatcher):
@@ -225,3 +254,5 @@ def register_callbacks(dp: Dispatcher):
     dp.register_callback_query_handler(qiwi, text_contains='qiwi-', state='*')
 
     dp.register_callback_query_handler(tokenq, text_contains='tokenq')
+
+    dp.register_callback_query_handler(pay, text_contains='pay-', state='*')
