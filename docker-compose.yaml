@@ -1,0 +1,14 @@
+version: '3.5'
+
+volumes:
+  support_bot:
+    external: true
+
+
+services:
+  support_bot:
+    build: .
+    restart: always
+    volumes:
+      - support_bot:/db
+      - /app/venv
